@@ -46,22 +46,39 @@ Local folder: `C:\Users\Tyjcr\swap-meet-sprint`. Git author is set to Bal Tak wi
 * `store/` holds everything the forms ask for: `crazygames.md` and `itch.md` with every field ready to paste, three CrazyGames covers plus the itch.io cover and a link preview image, screenshots at three sizes, and two silent 18 second preview videos (1920 by 1080 and 1080 by 1620, H.264) that open on the cover. `npm run store` renders them all frame by frame. I looked at every cover and at stills pulled out of the finished videos.
 * Tests: 77 unit tests and 15 browser tests pass. New: layout at all 14 portal and phone sizes (scale 2 or more, nothing overlaps, buttons at least 44 points tall, safe areas kept).
 
+### Milestone 4: iPhone (built, waiting on the owner to run it)
+
+* `ios-app/` is an Expo app on SDK 58 (the same major as Pumpwise), React Native 0.88.1, bundle ID `com.tyjcraw.swapmeetsprint`, owner `tjcraw6589s-team`, portrait, iPhone only, status bar hidden, dark splash.
+* It shows one full screen web view with the `ios` target built as one self contained 93 KB HTML page (`npm run build:ios` writes `ios-app/game/`). Fully offline: the web view refuses every link and new window, with no browser chrome, no bounce, no text selection and no link previews.
+* Bridge (`src/platform/ios.ts` and `ios-app/App.tsx`): saves go to native storage and are handed back before the page loads, so progress survives; haptics on buy, sale, fake, grail, deal and no deal through `expo-haptics`; Share opens the native share sheet with the score text and the 1080 by 1080 card image; the app tells the game when it goes to the background and back; the splash screen stays up until the game says it is ready.
+* Checks: `expo-doctor` passes 20 of 20, the app type checks, and `expo export` bundles it for iOS. It has not run on a real iPhone yet (that needs the owner's step 4 below). Unit tests cover the bridge.
+* `.github/workflows/ios-build.yml` is the Pumpwise workflow adapted: started by hand, runs tests, builds the game page, then `eas build --local` on GitHub's free Mac runner and uploads to TestFlight. It never submits for review.
+* GitHub Pages site gains `privacy.html` (collects nothing, says so) and `support.html` (help, and issues on the project page as the contact; no personal email anywhere). Only the web build carries them.
+* `store/ios/`: `app-store.md` with every App Store Connect field ready to paste (name, subtitle, promo text, description, keywords, URLs, categories, age rating answers, privacy label "Data Not Collected", review notes), the 1024 icon, and screenshots at 1206 by 2622 (the size Apple requires now) and 1320 by 2868, all flat RGB with no alpha. Sizes read from Apple's page on 12 Nov 2026.
+* App icon and splash image are drawn in code (`drawIcon` in `src/game/cover.ts`) and rendered by `npm run store`.
+* Tests: 81 unit tests and 15 browser tests pass.
+
 ## Live
 
 Nothing is live yet. GitHub Pages goes live as soon as step 1 below is done. The link will be https://tjcraw6589.github.io/swap-meet-sprint/ (it shows the GitHub account name).
 
-## Waiting on the owner (Milestone 3)
+## Waiting on the owner
 
-1. Let me use GitHub. Open a terminal and run `gh auth login`. Pick GitHub.com, then HTTPS, then "Login with a web browser". Copy the one time code it shows, press Enter, paste the code into the page that opens and approve. Then tell me "GitHub done". I will then create the public repo `swap-meet-sprint`, push, switch on Pages and send you the live link.
+One list for Milestones 3 and 4. Steps 2, 3 and 4 can be done any time; steps 5 to 9 need step 1 first.
+
+1. Let me use GitHub. Open a terminal and run `gh auth login`. Pick GitHub.com, then HTTPS, then "Login with a web browser". Copy the one time code it shows, press Enter, paste the code into the page that opens and approve. Then tell me "GitHub done". I will create the public repo `swap-meet-sprint`, push, switch on Pages and send you the live link.
 2. CrazyGames. Go to https://developer.crazygames.com and sign up for a free developer account. Choose to submit a new game. Fill each field from `store/crazygames.md` and upload the files it lists (the zip, three covers, two videos). Payout details are yours alone; I never need them. Press submit when you are happy, then tell me it is in.
 3. itch.io. Sign up for a free account at https://itch.io. Choose "Upload new project". Fill each field from `store/itch.md`, upload `release/swap-meet-sprint-itch-0.1.0.zip` and the cover and screenshots it lists. Set it public when you are happy, then send me the page link.
-
-Steps 2 and 3 do not depend on step 1. Nothing else waits on you right now.
+4. Try the iPhone app in Expo Go. Install Expo Go from the App Store on your iPhone (free). Put the phone on the same WiFi as this PC. In a terminal run `cd C:\Users\Tyjcr\swap-meet-sprint\ios-app` and then `npx expo start`. Point the iPhone camera at the QR code it shows and open it in Expo Go. Play a round: check you feel the taps on buy and sale, that Share opens the share sheet, and that your best score is still there after you close and reopen Expo Go. Tell me what you see.
+5. Link the app to Expo. In the same `ios-app` folder run `npx eas-cli@latest init`. Sign in to Expo if it asks (you type the password, not me). Say yes to creating the project `swap-meet-sprint` under `tjcraw6589s-team`. Tell me "Expo done" and I will commit the change it makes.
+6. Signing, once. In the same folder run `npx eas-cli@latest credentials --platform ios`. Pick the production profile and let Expo set up the distribution certificate and provisioning profile (reuse the Pumpwise certificate if it offers). Sign in to Apple when it asks. In the same menu choose the App Store Connect API key for EAS Submit and pick the existing key that Pumpwise uses.
+7. Create the app record. In App Store Connect choose My Apps, the plus button, New App. Platform iOS, name Swap Meet Sprint, bundle ID `com.tyjcraw.swapmeetsprint` (it appears after step 6), SKU `swapmeetsprint`. Then open App Information and send me the Apple ID number shown there (it is not a secret). I put it in `ios-app/eas.json`.
+8. The Expo token. On expo.dev open Account settings, then Access tokens, and create a token called "swap meet sprint github". On GitHub open the `swap-meet-sprint` repo, Settings, Secrets and variables, Actions, New repository secret. Name it `EXPO_TOKEN` and paste the token there. Never paste it into a chat.
+9. Build. On GitHub open the repo, Actions, "iPhone build", Run workflow (branch main, TestFlight ticked). It takes 30 to 60 minutes, then the build shows in TestFlight. Later, when you are happy with TestFlight, fill the listing from `store/ios/app-store.md` and press Submit for Review yourself.
 
 ## Next
 
-* Milestone 4: iPhone. An Expo shell with the same Expo SDK as Pumpwise (58), a WebView showing the `ios` target built as one self contained HTML file, native haptics, saves and share sheet, portrait, offline. The build workflow copied from Pumpwise, App Store text, a privacy page on the Pages site, and screenshots in `store/ios/`.
-* Then Milestone 5 (money): CrazyGames full launch SDK ads when invited, AdMob rewarded ads on iPhone.
+* Milestone 5 (money): AdMob rewarded ads on iPhone with Google's test ad units, the tracking permission prompt and privacy label text. This needs a development build (AdMob does not run in Expo Go), so it comes after the first TestFlight build works. CrazyGames ads switch on (`ADS_LIVE`) only when they invite the game to the full launch.
 * Open item for Milestone 5: the CrazyGames ads page asks that a rewarded ad have an alternative way to earn the reward. Extra time and double start have none yet; decide before switching ads on.
 
 ## Decisions so far

@@ -5,7 +5,7 @@ import { attachInput } from './game/input.ts'
 import { createLoop } from './game/loop.ts'
 import { Sound } from './game/audio.ts'
 import { shareCardBlob, drawShareCard } from './game/share.ts'
-import { drawCover } from './game/cover.ts'
+import { drawCover, drawIcon } from './game/cover.ts'
 import { STEP_MS } from './game/loop.ts'
 import { setDebug, track, trackedEvents } from './game/events.ts'
 import { getPlatform } from './platform/index.ts'
@@ -21,6 +21,12 @@ const renderer = new Renderer(canvas)
 const sound = new Sound()
 
 function safeInsets(): Insets {
+  // debug only: pretend to be a phone with a notch, for store screenshots
+  const fake = debug ? params.get('inset') : null
+  if (fake) {
+    const [top, right, bottom, left] = fake.split(',').map((n) => Number(n) || 0)
+    return { top, right: right ?? 0, bottom: bottom ?? 0, left: left ?? 0 }
+  }
   const cs = getComputedStyle(safeProbe)
   const px = (v: string) => Math.max(0, parseFloat(v) || 0)
   return { top: px(cs.top), right: px(cs.right), bottom: px(cs.bottom), left: px(cs.left) }
@@ -118,6 +124,7 @@ if (debug) {
     events: () => trackedEvents(),
     shareCard: () => drawShareCard(game).toDataURL('image/png'),
     cover: (w: number, h: number) => drawCover(w, h).toDataURL('image/png'),
+    icon: (size: number, opaque: boolean) => drawIcon(size, opaque).toDataURL('image/png'),
     /** Advance by ms of game time, draw, and return the canvas as a PNG data URL. */
     filmFrame: (ms: number) => {
       filmAcc += ms

@@ -589,7 +589,7 @@ export class Renderer {
     const wide = !L.portrait
     const cur = run.current
     let buySub = wide ? 'Right or D' : ''
-    if (cur && !run.locked && !run.canBuy) buySub = run.stallFull ? 'Stall full' : 'Not enough cash'
+    if (cur && !run.locked && !run.canBuy) buySub = run.stallFull ? 'Stall full' : 'Need cash'
     const scale = Math.min(labelScale('PASS', b.pass, true), labelScale('HAGGLE', b.haggle, true), labelScale('BUY', b.buy, true))
     this.button(b.pass, 'PASS', 'pass', game, { enabled: run.canPass, color: 'pass', icon: 'left', sub: wide ? 'Left or A' : '', scale })
     this.button(b.haggle, 'HAGGLE', 'haggle', game, { enabled: run.canHaggle, color: 'haggle', icon: 'up', sub: wide ? 'Up, W or Space' : '', scale })

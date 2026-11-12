@@ -17,8 +17,8 @@ const VETERAN = {
   lifetimeProfit: 9870,
   runs: 18,
   streak: 6,
-  dailyDate: null,
-  dailyScore: null,
+  dailyDate: '2026-11-11',
+  dailyScore: 1310,
   dailyBestName: null,
   dailyBestProfit: null,
   dailyBestArt: null,
@@ -45,7 +45,7 @@ const COVERS: Array<[string, number, number]> = [
 
 test('covers', async ({ page }) => {
   await keepers(page, VETERAN)
-  await page.goto('/?debug=1&film=1')
+  await page.goto('/?debug=1&film=1&today=2026-11-12')
   for (const [name, w, h] of COVERS) {
     const url = await page.evaluate(([cw, ch]) => (window as unknown as { __sms: { cover(w: number, h: number): string } }).__sms.cover(cw, ch), [w, h])
     saveDataUrl(url, join(OUT, 'covers', `${name}.png`))

@@ -1,6 +1,7 @@
 import type { Platform, TargetName, PlatformAds } from './types.ts'
 import { webPlatform } from './web.ts'
 import { crazyGamesPlatform } from './crazygames.ts'
+import { iosPlatform } from './ios.ts'
 
 declare const __TARGET__: string
 
@@ -27,10 +28,11 @@ export const stubAds: PlatformAds = {
 
 let instance: Platform | null = null
 
-/** The platform for the current build target. The ios target arrives in Milestone 4. */
+/** The platform for the current build target. */
 export function getPlatform(opts: { stubAds?: boolean } = {}): Platform {
   if (instance) return instance
-  const base = targetName() === 'crazygames' ? crazyGamesPlatform : webPlatform
+  const t = targetName()
+  const base = t === 'crazygames' ? crazyGamesPlatform : t === 'ios' ? iosPlatform : webPlatform
   instance = opts.stubAds ? { ...webPlatform, adsEnabled: true, ads: stubAds } : base
   return instance
 }

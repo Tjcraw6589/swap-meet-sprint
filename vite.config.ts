@@ -16,6 +16,8 @@ function crazyGamesSdk(): Plugin {
 
 export default defineConfig({
   base: './',
+  // privacy and support pages ship only with the GitHub Pages site
+  publicDir: target === 'web' ? 'public' : false,
   plugins: [crazyGamesSdk()],
   define: {
     __TARGET__: JSON.stringify(target),

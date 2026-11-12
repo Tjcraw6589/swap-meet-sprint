@@ -14,7 +14,9 @@ Made by Bal Tak. Built with TypeScript, Vite and Canvas 2D, no game engine and n
 * `npm run typecheck` runs the TypeScript compiler.
 * `npm run build` builds the web target into `dist/web`.
 * `npm run release` builds the CrazyGames and itch.io zips into `release/`.
-* `npm run store` renders covers, screenshots and preview videos into `store/`.
+* `npm run store` renders covers, screenshots, preview videos, the app icon and iPhone screenshots.
+* `npm run build:ios` packs the game into one HTML page for the iPhone app in `ios-app/`.
+* In `ios-app`: `npx expo start` runs the iPhone app in Expo Go.
 
 ## Debug address options
 
@@ -33,7 +35,10 @@ Dev builds, or any build with `?debug=1`:
 * `src/core` the rules: seeded random, item generator, grails, economy, run state machine, bots, simulator. Pure TypeScript, no browser needed.
 * `src/game` the game: screens and state (`game.ts`), renderer, layout, pixel font, pixel art, scene, sound, saves, share card, input, fixed step loop, guided first run, local events.
 * `src/platform` the platform layer: ads, storage, share, haptics and lifecycle. `web.ts` for GitHub Pages and itch.io, `crazygames.ts` for CrazyGames.
-* `store` everything the portal forms ask for. `release` the portal zips.
+* `store` everything the portal forms ask for, and `store/ios` for the App Store. `release` the portal zips.
+* `ios-app` the Expo app for iPhone: a full screen web view with the game, native saves, haptics and share sheet.
+* `public` the privacy and support pages for the GitHub Pages site.
+* `.github/workflows/ios-build.yml` builds the iPhone app on GitHub's Mac runner and uploads it to TestFlight, started by hand.
 * `.github/workflows/pages.yml` tests and publishes the web build to GitHub Pages on every push.
 * `tests` Vitest tests. `e2e` Playwright tests.
 * `proof` screenshots and the clip each milestone was checked with.

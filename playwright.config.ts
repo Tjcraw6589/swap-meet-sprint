@@ -2,8 +2,8 @@ import { defineConfig } from '@playwright/test'
 
 export default defineConfig({
   testDir: './e2e',
-  // store.spec.ts writes store assets; it only runs through npm run store
-  testIgnore: process.env.STORE ? [] : ['**/store.spec.ts'],
+  // the store specs write store assets; they only run through npm run store
+  testIgnore: process.env.STORE ? [] : ['**/store.spec.ts', '**/store-ios.spec.ts'],
   timeout: 180_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,

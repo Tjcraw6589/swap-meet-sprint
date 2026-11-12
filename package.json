@@ -15,7 +15,8 @@
     "e2e": "playwright test",
     "e2e:headed": "playwright test --headed",
     "release": "node scripts/release.ts",
-    "store": "node scripts/store.ts"
+    "store": "node scripts/store.ts",
+    "build:ios": "node scripts/build-ios.ts"
   },
   "license": "MIT",
   "devDependencies": {

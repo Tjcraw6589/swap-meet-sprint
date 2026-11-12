@@ -138,3 +138,51 @@ export function drawCover(w: number, h: number): HTMLCanvasElement {
   o.drawImage(small, 0, 0, lw, lh, 0, 0, lw * scale, lh * scale)
   return out
 }
+
+/**
+ * The app icon: a striped awning over a handheld and a gold coin, on the
+ * sunrise sky. Drawn at 64 by 64 and scaled up. App Store icons must be
+ * opaque; the splash version keeps a clear background.
+ */
+export function drawIcon(size: number, opaque = true): HTMLCanvasElement {
+  const L = 64
+  const small = document.createElement('canvas')
+  small.width = L
+  small.height = L
+  const g = small.getContext('2d')!
+  g.imageSmoothingEnabled = false
+  if (opaque) {
+    drawScene(g, L, L, 0.7)
+    // awning
+    for (let x = 0; x < L; x++) {
+      g.fillStyle = Math.floor(x / 8) % 2 ? C.clothB : C.clothA
+      g.fillRect(x, 0, 1, 12)
+      const scallop = 2 - Math.round(Math.abs(Math.sin(((x % 8) / 8) * Math.PI)) * 2)
+      g.fillRect(x, 12, 1, 2 + scallop)
+    }
+    g.fillStyle = C.ink
+    g.fillRect(0, 0, L, 1)
+  }
+  const gr = GRAILS[0]
+  g.drawImage(itemSprite(gr.category, gr.artSeed, gr.palette), 0, 0, ITEM_PX, ITEM_PX, 10, opaque ? 18 : 10, ITEM_PX * 1.25, ITEM_PX * 1.25)
+  g.drawImage(icon('coin'), 0, 0, 8, 8, opaque ? 38 : 36, opaque ? 40 : 34, 20, 20)
+  g.fillStyle = C.goldLight
+  for (const [x, y] of [
+    [50, opaque ? 22 : 12],
+    [8, opaque ? 50 : 44],
+  ]) {
+    g.fillRect(x - 2, y, 5, 1)
+    g.fillRect(x, y - 2, 1, 5)
+  }
+  const out = document.createElement('canvas')
+  out.width = size
+  out.height = size
+  const o = out.getContext('2d')!
+  o.imageSmoothingEnabled = false
+  if (opaque) {
+    o.fillStyle = C.skyNight
+    o.fillRect(0, 0, size, size)
+  }
+  o.drawImage(small, 0, 0, L, L, 0, 0, size, size)
+  return out
+}

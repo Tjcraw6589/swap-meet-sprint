@@ -1,0 +1,85 @@
+# Builds the iPhone app on GitHub's own Mac computers, free for this public
+# repository, and uploads it to TestFlight. Copied from the Pumpwise repo's
+# workflow: the build runs here with "eas build --local" instead of on Expo's
+# servers, so it does not use Expo's monthly free cloud builds, and it signs
+# with the certificate and profile Expo keeps for this app.
+#
+# Runs only when started by hand (Actions, "iPhone build", Run workflow). Never
+# on pull requests, so the Expo token can't reach code from forks. Uploading to
+# TestFlight never submits to App Review: that stays the owner's click.
+#
+# Needs one repository secret: EXPO_TOKEN (expo.dev, Account settings, Access tokens).
+name: iPhone build
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch to build
+        required: true
+        default: main
+      testflight:
+        description: Upload to TestFlight when the build succeeds
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.repository == 'Tjcraw6589/swap-meet-sprint'
+    runs-on: macos-26
+    timeout-minutes: 120
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - name: Check the Expo token is set
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::Add the EXPO_TOKEN repository secret first (expo.dev, Account settings, Access tokens)."
+            exit 1
+          fi
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            ios-app/package-lock.json
+      - name: Build the game page (tests first)
+        run: |
+          npm ci
+          npm test
+          npm run build:ios
+      - name: Check the app is linked to Expo
+        working-directory: ios-app
+        run: |
+          if ! grep -q '"projectId"' app.json; then
+            echo "::error::Run 'npx eas-cli@latest init' in ios-app once and commit app.json (step in SESSION_HANDOVER.md)."
+            exit 1
+          fi
+      - name: Tools on this Mac
+        run: |
+          xcodebuild -version
+          pod --version || true
+      - name: Install the app
+        working-directory: ios-app
+        run: npm ci
+      - name: Expo account
+        working-directory: ios-app
+        run: npx --yes eas-cli@latest whoami
+      - name: Build (same signing as Expo's cloud builds; the build number goes up by one)
+        working-directory: ios-app
+        run: npx --yes eas-cli@latest build --platform ios --profile production --local --non-interactive --output "$RUNNER_TEMP/SwapMeetSprint.ipa"
+      - name: Upload to TestFlight
+        if: ${{ inputs.testflight }}
+        working-directory: ios-app
+        run: npx --yes eas-cli@latest submit --platform ios --profile production --path "$RUNNER_TEMP/SwapMeetSprint.ipa" --non-interactive --wait
