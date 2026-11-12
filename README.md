@@ -13,6 +13,8 @@ Made by Bal Tak. Built with TypeScript, Vite and Canvas 2D, no game engine and n
 * `npm run balance` prints the balance numbers that live in `BALANCE.md`.
 * `npm run typecheck` runs the TypeScript compiler.
 * `npm run build` builds the web target into `dist/web`.
+* `npm run release` builds the CrazyGames and itch.io zips into `release/`.
+* `npm run store` renders covers, screenshots and preview videos into `store/`.
 
 ## Debug address options
 
@@ -30,7 +32,9 @@ Dev builds, or any build with `?debug=1`:
 
 * `src/core` the rules: seeded random, item generator, grails, economy, run state machine, bots, simulator. Pure TypeScript, no browser needed.
 * `src/game` the game: screens and state (`game.ts`), renderer, layout, pixel font, pixel art, scene, sound, saves, share card, input, fixed step loop, guided first run, local events.
-* `src/platform` the platform layer: ads, storage, share, haptics and lifecycle, one stub per target.
+* `src/platform` the platform layer: ads, storage, share, haptics and lifecycle. `web.ts` for GitHub Pages and itch.io, `crazygames.ts` for CrazyGames.
+* `store` everything the portal forms ask for. `release` the portal zips.
+* `.github/workflows/pages.yml` tests and publishes the web build to GitHub Pages on every push.
 * `tests` Vitest tests. `e2e` Playwright tests.
 * `proof` screenshots and the clip each milestone was checked with.
 * `BALANCE.md` the tuned numbers and how they were checked.

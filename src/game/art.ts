@@ -661,6 +661,7 @@ const ICONS: Record<string, string[]> = {
   glass: ['.dddd...', 'd....d..', 'd.ww.d..', 'd.w..d..', 'd....d..', '.dddd...', '.....dd.', '......dd'],
   shelf: ['wwwwwwww', 'w.y..b.w', 'w.y.bb.w', 'wwwwwwww', 'w.r..g.w', 'w.rr.g.w', 'wwwwwwww', '........'],
   share: ['....ww..', '...wwww.', '....ww..', '.w..ww..', '.w..ww..', '.w....w.', '.wwwwww.', '........'],
+  video: ['........', 'wwwwww..', 'w....ww.', 'w....www', 'w....www', 'w....ww.', 'wwwwww..', '........'],
   clock: ['..wwww..', '.w....w.', 'w...w..w', 'w...w..w', 'w...www.', 'w......w', '.w....w.', '..wwww..'],
 }
 

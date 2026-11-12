@@ -4,7 +4,7 @@ Another assistant reads this file to report status. Keep it current after every 
 
 Project: Swap Meet Sprint. A one minute buy, haggle or pass game for web portals and iPhone from one codebase. Credit: Bal Tak. Brief: `C:\Users\Tyjcr\Tools\GameBriefs\SWAP_MEET_SPRINT_PROMPT.md`.
 
-Local folder: `C:\Users\Tyjcr\swap-meet-sprint`. Git author is set to Bal Tak with the GitHub noreply address. No remote yet.
+Local folder: `C:\Users\Tyjcr\swap-meet-sprint`. Git author is set to Bal Tak with the GitHub noreply address. No remote yet (waiting on the owner's step 1).
 
 ## Done
 
@@ -34,22 +34,39 @@ Local folder: `C:\Users\Tyjcr\swap-meet-sprint`. Git author is set to Bal Tak wi
 * Proof in `proof/m2`: screenshots of every screen at all three sizes, the share card, and `clip-10s.webm`, a muted 10 second clip of the game playing itself (stills next to it). I looked at every image.
 * Tests: 59 unit tests (`npm test`) and 12 browser tests (`npm run e2e`) pass. New unit tests cover the game flow (guided run, Daily scored versus practice, break cadence, one extra time offer, no ads on the web target), keepers, text fitting the smallest card, and the loop advancing the same game time at 30, 60, 144 and 165 Hz.
 
+### Milestone 3: web release (built, waiting on the owner to go live)
+
+* Title check on 12 Nov 2026: no game called Swap Meet Sprint on the App Store (catalogue search), CrazyGames (site search) or itch.io (several games are called plain "Swap Meet", none "Swap Meet Sprint"). The title stays.
+* Read the CrazyGames requirements pages (intro, technical, gameplay, ads, covers, SDK, data) on 12 Nov 2026. What they ask for is listed at the end of `store/crazygames.md`.
+* `crazygames` target in `src/platform/crazygames.ts`: their SDK v3 (only that build loads it), loading and gameplay events, saves through the Data Module with a one time copy of an older local save, happy time on a new best, ads wired through their SDK but switched off (`ADS_LIVE = false`) for the trial launch, game sound paused while an ad plays. Tested on localhost, where their SDK runs in local mode.
+* Ad offer screens now follow their rules: the skip button looks exactly like the watch button, and watch buttons carry a video icon.
+* Audio also resumes on touch end and pointer up, which iOS needs.
+* `npm run release` builds `release/swap-meet-sprint-crazygames-0.1.0.zip` and `release/swap-meet-sprint-itch-0.1.0.zip` (34 KB each, index.html at the root). Windows unzips both, and `e2e/release.spec.ts` unpacks each one, serves it from a plain static server and plays it.
+* `.github/workflows/pages.yml` type checks, tests, builds and publishes the web target to GitHub Pages on every push to main.
+* `store/` holds everything the forms ask for: `crazygames.md` and `itch.md` with every field ready to paste, three CrazyGames covers plus the itch.io cover and a link preview image, screenshots at three sizes, and two silent 18 second preview videos (1920 by 1080 and 1080 by 1620, H.264) that open on the cover. `npm run store` renders them all frame by frame. I looked at every cover and at stills pulled out of the finished videos.
+* Tests: 77 unit tests and 15 browser tests pass. New: layout at all 14 portal and phone sizes (scale 2 or more, nothing overlaps, buttons at least 44 points tall, safe areas kept).
+
 ## Live
 
-Nothing is live yet.
+Nothing is live yet. GitHub Pages goes live as soon as step 1 below is done. The link will be https://tjcraw6589.github.io/swap-meet-sprint/ (it shows the GitHub account name).
 
-## Waiting on the owner
+## Waiting on the owner (Milestone 3)
 
-Nothing yet. Nothing in Milestones 0 to 2 needs him.
+1. Let me use GitHub. Open a terminal and run `gh auth login`. Pick GitHub.com, then HTTPS, then "Login with a web browser". Copy the one time code it shows, press Enter, paste the code into the page that opens and approve. Then tell me "GitHub done". I will then create the public repo `swap-meet-sprint`, push, switch on Pages and send you the live link.
+2. CrazyGames. Go to https://developer.crazygames.com and sign up for a free developer account. Choose to submit a new game. Fill each field from `store/crazygames.md` and upload the files it lists (the zip, three covers, two videos). Payout details are yours alone; I never need them. Press submit when you are happy, then tell me it is in.
+3. itch.io. Sign up for a free account at https://itch.io. Choose "Upload new project". Fill each field from `store/itch.md`, upload `release/swap-meet-sprint-itch-0.1.0.zip` and the cover and screenshots it lists. Set it public when you are happy, then send me the page link.
+
+Steps 2 and 3 do not depend on step 1. Nothing else waits on you right now.
 
 ## Next
 
-* Milestone 3: web release. Search the App Store, CrazyGames and itch.io for the title first. Read the CrazyGames requirements pages. Add the `crazygames` target (their SDK, gameplay start and stop events, data module saves), a GitHub Pages workflow, zips for CrazyGames and itch.io in `release/`, and a `store/` folder with titles, descriptions, tags, controls text, covers, screenshots and a clip. the owner's steps (accounts, uploads) will come as one numbered list.
-* Then Milestone 4 (iPhone shell) and Milestone 5 (money).
+* Milestone 4: iPhone. An Expo shell with the same Expo SDK as Pumpwise (58), a WebView showing the `ios` target built as one self contained HTML file, native haptics, saves and share sheet, portrait, offline. The build workflow copied from Pumpwise, App Store text, a privacy page on the Pages site, and screenshots in `store/ios/`.
+* Then Milestone 5 (money): CrazyGames full launch SDK ads when invited, AdMob rewarded ads on iPhone.
+* Open item for Milestone 5: the CrazyGames ads page asks that a rewarded ad have an alternative way to earn the reward. Extra time and double start have none yet; decide before switching ads on.
 
 ## Decisions so far
 
-* Working title stays Swap Meet Sprint until the store searches before anything goes public (Milestone 3).
+* Title: Swap Meet Sprint, checked free on the App Store, CrazyGames and itch.io on 12 Nov 2026.
 * Repo will be `swap-meet-sprint`, public, on the existing GitHub account. The Pages link will show that account name.
 * Daily seed uses the UTC date.
 * Haggles per item are capped at 6; the chance halves each time as the brief says.
@@ -57,3 +74,5 @@ Nothing yet. Nothing in Milestones 0 to 2 needs him.
 * The guided first run does not count toward best score, profit or finds.
 * Presses in the first 0.6 s of the result screen are ignored so mashing keys at 0 s cannot skip it.
 * Rewarded extra time reopens the morning for 15 seconds with the cash in hand (the stall already sold at 0 s).
+* The CrazyGames build keeps the title screen for returning players: their rules allow one click to gameplay, and new players land straight in the guided run.
+* Preview videos are encoded with `ffmpeg-static`, a free dev tool from npm. It is never shipped in the game.

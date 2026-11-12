@@ -529,7 +529,10 @@ export class Game {
     if (!this.guided) {
       k.runs++
       k.lifetimeProfit += run.cash - start
-      if (newBest) k.best = run.cash
+      if (newBest) {
+        k.best = run.cash
+        this.platform.lifecycle.happy?.()
+      }
     }
     if (this.mode === 'daily' && this.scored) {
       k.dailyScore = run.cash

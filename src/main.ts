@@ -5,6 +5,8 @@ import { attachInput } from './game/input.ts'
 import { createLoop } from './game/loop.ts'
 import { Sound } from './game/audio.ts'
 import { shareCardBlob, drawShareCard } from './game/share.ts'
+import { drawCover } from './game/cover.ts'
+import { STEP_MS } from './game/loop.ts'
 import { setDebug, track, trackedEvents } from './game/events.ts'
 import { getPlatform } from './platform/index.ts'
 
@@ -13,7 +15,6 @@ const debug = import.meta.env.DEV || params.has('debug')
 setDebug(debug)
 
 const platform = getPlatform({ stubAds: debug && params.get('ads') === 'stub' })
-if (debug && params.has('fresh')) platform.storage.remove('sms.keepers.v1')
 const canvas = document.getElementById('game') as HTMLCanvasElement
 const safeProbe = document.getElementById('safe') as HTMLDivElement
 const renderer = new Renderer(canvas)
@@ -43,6 +44,12 @@ function resize(): void {
 window.addEventListener('resize', resize)
 window.addEventListener('orientationchange', () => setTimeout(resize, 50))
 resize()
+
+// Portal SDKs and native saves get ready before the first frame.
+await (platform.init?.() ?? Promise.resolve()).catch(() => {})
+if (debug && params.has('fresh')) platform.storage.remove('sms.keepers.v1')
+// Loading is over: tell the portal before the first run starts.
+platform.lifecycle.ready()
 
 const game = new Game(
   platform,
@@ -79,17 +86,29 @@ attachInput(canvas, {
   command: (cmd) => game.command(cmd),
 })
 
+// Browsers, and iOS above all, only let audio resume inside a real gesture.
+for (const ev of ['pointerup', 'touchend', 'keydown'] as const) window.addEventListener(ev, () => sound.unlock(), { passive: true })
+platform.ads.onAdAudio?.((adPlaying) => {
+  if (adPlaying) sound.suspend()
+  else sound.unlock()
+})
+
+// Film mode (debug only): the page does not run itself; a script steps it
+// frame by frame so store videos are exact and smooth.
+const film = debug && params.has('film')
 platform.lifecycle.onVisibility((visible) => {
+  if (film) return
   if (visible) loop.start()
   else {
     loop.stop()
     sound.suspend()
   }
 })
-platform.lifecycle.ready()
-loop.start()
+if (!film) loop.start()
+else renderer.draw(game)
 canvas.focus()
 
+let filmAcc = 0
 if (debug) {
   const w = window as unknown as { __sms: unknown }
   w.__sms = {
@@ -98,6 +117,17 @@ if (debug) {
     layout: () => layout,
     events: () => trackedEvents(),
     shareCard: () => drawShareCard(game).toDataURL('image/png'),
+    cover: (w: number, h: number) => drawCover(w, h).toDataURL('image/png'),
+    /** Advance by ms of game time, draw, and return the canvas as a PNG data URL. */
+    filmFrame: (ms: number) => {
+      filmAcc += ms
+      while (filmAcc >= STEP_MS) {
+        game.update(STEP_MS)
+        filmAcc -= STEP_MS
+      }
+      renderer.draw(game)
+      return canvas.toDataURL('image/png')
+    },
     state: () => {
       const run = game.run
       const cur = run?.current

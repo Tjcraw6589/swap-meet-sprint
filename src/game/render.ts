@@ -377,8 +377,8 @@ export class Renderer {
       y += FACE_PX * fs + 2
       this.text(fitText(SELLER_NAME[item.sellerType], iw), ix, y, sellerInk(item.sellerType))
       y += LINE + 2
-      this.prices(item, ask, ix, y, iw, true)
-      y = r.y + pad + side + 4
+      const pricesBottom = this.prices(item, ask, ix, y, iw, true)
+      y = Math.max(r.y + pad + side, pricesBottom) + 4
       const nameLines = clampLines(wrapText(item.name, r.w - pad * 2), 3, r.w - pad * 2)
       nameLines.forEach((l, i) => this.text(l, r.x + pad, y + i * LINE, C.ink))
       y += nameLines.length * LINE + 4
@@ -428,7 +428,8 @@ export class Renderer {
     this.sprite(faceSprite(type, face), x, y, scale)
   }
 
-  private prices(item: PricedItem, ask: number, x: number, y: number, w: number, stacked = false): void {
+  /** Draws guide and ask; returns the y just below what it drew. */
+  private prices(item: PricedItem, ask: number, x: number, y: number, w: number, stacked = false): number {
     const guideTxt = money(item.guide)
     const askTxt = money(ask)
     const askColor = ask < item.guide ? C.goodDark : ask > item.guide ? C.badDark : C.ink
@@ -439,8 +440,12 @@ export class Renderer {
       const y2 = y + LINE + GLYPH_H * big(guideTxt) + 4
       this.text('ASK', x, y2, C.inkSoft)
       this.text(askTxt, x, y2 + LINE, askColor, big(askTxt))
-      if (ask < item.ask) this.strike(`was ${money(item.ask)}`, x, y2 + LINE + GLYPH_H * big(askTxt) + 2)
-      return
+      let bottom = y2 + LINE + GLYPH_H * big(askTxt)
+      if (ask < item.ask) {
+        this.strike(`was ${money(item.ask)}`, x, bottom + 2)
+        bottom += LINE + 2
+      }
+      return bottom
     }
     const half = Math.floor(w / 2)
     this.text('GUIDE', x, y, C.inkSoft)
@@ -448,6 +453,7 @@ export class Renderer {
     this.text('ASK', x + half, y, C.inkSoft)
     this.text(askTxt, x + half, y + LINE, askColor, big(askTxt))
     if (ask < item.ask) this.strike(`was ${money(item.ask)}`, x + half + measure('ASK') + 4, y)
+    return y + LINE + GLYPH_H * Math.max(big(guideTxt), big(askTxt))
   }
 
   private strike(s: string, x: number, y: number): void {
@@ -645,8 +651,9 @@ export class Renderer {
     const skipR = { x: p.x + 6, y: p.y + p.h - 34, w: bw, h: 28 }
     const watchR = { x: p.x + 12 + bw, y: p.y + p.h - 34, w: bw, h: 28 }
     const scale = Math.min(labelScale('NO THANKS', skipR, false), labelScale('+15 SEC', watchR, true))
+    // The skip choice must look exactly like the watch choice (portal ad rules).
     this.button(skipR, 'NO THANKS', 'skip', game, { color: 'pass', scale })
-    this.button(watchR, '+15 SEC', 'watch', game, { color: 'buy', icon: 'clock', scale })
+    this.button(watchR, '+15 SEC', 'watch', game, { color: 'pass', icon: 'video', scale })
   }
 
   private drawTitle(game: Game): void {
@@ -762,7 +769,7 @@ export class Renderer {
     const double = game.canOfferDouble
     if (double) {
       const dr = { x: p.x + 6, y: by - 26, w: p.w - 12, h: 22 }
-      this.button(dr, 'START NEXT WITH $100', 'double', game, { color: 'haggle', icon: 'coin' })
+      this.button(dr, 'START NEXT WITH $100', 'double', game, { color: 'pass', icon: 'video' })
     }
     const bw = Math.floor((p.w - 18) / 2)
     const shareR = { x: p.x + 6, y: by, w: bw, h: bh }

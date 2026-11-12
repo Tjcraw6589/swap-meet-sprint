@@ -10,6 +10,8 @@ export interface PlatformAds {
   canShowRewarded(placement: RewardPlacement): boolean
   showRewarded(placement: RewardPlacement, onReward: () => void, onDone?: () => void): void
   showBreak(onDone: () => void): void
+  /** Tells the game when an ad starts and stops playing, so game sound can pause. */
+  onAdAudio?(cb: (adPlaying: boolean) => void): void
 }
 
 export interface PlatformStorage {
@@ -33,10 +35,14 @@ export interface PlatformLifecycle {
   gameplayStop(): void
   /** Called when the page or app goes to the background or comes back. */
   onVisibility(cb: (visible: boolean) => void): void
+  /** A moment worth celebrating, such as a new best score. */
+  happy?(): void
 }
 
 export interface Platform {
   readonly name: TargetName
+  /** Optional async setup before the game starts (a portal SDK, native saves). */
+  init?(): Promise<void>
   readonly adsEnabled: boolean
   ads: PlatformAds
   storage: PlatformStorage
