@@ -12,15 +12,15 @@ Numbers from the headless simulator in `src/core`. Reprint them any time with `n
 
 Seeds are `sim-0` to `sim-1999`, played at a fixed 10 ms step. All three checks hold with the numbers in the brief unchanged.
 
-* Random bot: median $61, mean $75, P10 $19, P90 $143, best $610, under $50 in 39% of runs, sees 31.7 items, buys 10.2, haggles 12.3.
+* Random bot: median $61, mean $76, P10 $19, P90 $143, best $610, under $50 in 39% of runs, sees 31.7 items, buys 10.2, haggles 12.3.
 * Always buy: median $40, mean $88, P10 $9, P90 $205, best $4,875, under $50 in 57% of runs, sees 36.5 items, buys 28.2, haggles 0.
-* Clue reader: median $1,234, mean $1,859, P10 $403, P90 $3,808, best $24,522, under $50 in 0% of runs, sees 64.7 items, buys 26.0, haggles 18.4.
+* Clue reader: median $1,235, mean $1,864, P10 $410, P90 $3,925, best $24,281, under $50 in 0% of runs, sees 64.7 items, buys 26.0, haggles 18.4.
 
 Checks:
 
 * Clue reader median over random median: 20.2x (5x needed).
 * Always buy under $50: 57% (50% needed).
-* Clue reader median: $1,234 ($400 to $3,000 needed).
+* Clue reader median: $1,235 ($400 to $3,000 needed).
 
 Busts: 0% for every bot. With whole dollar prices and a $1 floor, a bought item always comes back as at least $1, so cash under $1 with an empty stall cannot happen after a purchase. The rule is still in the code as a safety net.
 
@@ -41,6 +41,9 @@ Numbers the brief left to me (marked `tune` in `src/core/run.ts`):
 * Slide in: 350 ms before a new item accepts input.
 * DEAL stamp: 450 ms input lock after a won haggle.
 * Haggles per item capped at 6 (by then the chance is tiny anyway).
+* Input buffer: a press made up to 220 ms before input unlocks still counts, so a card that is still landing never eats a tap.
+
+Grails: every grail tier item is one of 40 fixed grails (`src/core/grails.ts`), so the Finds shelf can fill in. Picking which grail adds one random draw to grail items only, which moved the numbers above by a few dollars (Milestone 2).
 
 How clues are chosen (`src/core/items.ts`):
 
@@ -65,4 +68,4 @@ Changing one bot number at a time keeps the median inside the window, so the win
 * Info quality 0.5: $1,380. Info quality 1.0: $1,045.
 * Slot wait 4 s: $1,282.
 
-A human who reads clues at roughly the clue reader's speed should land near $1,000. The P90 of $3,808 is the kind of run that makes a share card.
+A human who reads clues at roughly the clue reader's speed should land near $1,000. The P90 of $3,925 is the kind of run that makes a share card.

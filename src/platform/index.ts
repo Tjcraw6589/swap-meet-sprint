@@ -1,4 +1,4 @@
-import type { Platform, TargetName } from './types.ts'
+import type { Platform, TargetName, PlatformAds } from './types.ts'
 import { webPlatform } from './web.ts'
 
 declare const __TARGET__: string
@@ -9,12 +9,27 @@ export function targetName(): TargetName {
   return 'web'
 }
 
+/**
+ * Debug only stand in for a real ad network: "plays" an ad for a moment, then
+ * rewards. Lets the money hooks be seen and tested on the plain web build.
+ */
+export const stubAds: PlatformAds = {
+  canShowRewarded: () => true,
+  showRewarded: (_placement, onReward, onDone) => {
+    setTimeout(() => {
+      onReward()
+      onDone?.()
+    }, 600)
+  },
+  showBreak: (onDone) => setTimeout(onDone, 600),
+}
+
 let instance: Platform | null = null
 
 /** The platform for the current build target. Other targets arrive in Milestones 3 to 5. */
-export function getPlatform(): Platform {
+export function getPlatform(opts: { stubAds?: boolean } = {}): Platform {
   if (instance) return instance
-  instance = webPlatform
+  instance = opts.stubAds ? { ...webPlatform, adsEnabled: true, ads: stubAds } : webPlatform
   return instance
 }
 

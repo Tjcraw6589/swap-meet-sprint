@@ -32,6 +32,15 @@ export const DEFAULT_CONFIG: RunConfig = {
   haggleWinLockMs: 450,
 }
 
+export interface RunOptions {
+  /** Keep the event list for the game. The simulator turns it off. */
+  events?: boolean
+  /** Hand made items for the first indices (the guided first run). */
+  scripted?: ReadonlyArray<PricedItem | undefined>
+  /** The clock stands still while the current item index is below this. */
+  pauseTimerBelowIndex?: number
+}
+
 export type Action = 'buy' | 'haggle' | 'pass'
 export type ActionResult = 'ok' | 'deal' | 'nodeal' | 'blocked'
 
@@ -75,8 +84,9 @@ export type RunEvent =
 
 export class Run {
   readonly seed: string
-  readonly config: RunConfig
+  config: RunConfig
   elapsedMs = 0
+  extended = 0
   cash: number
   stall: StallEntry[] = []
   current: CurrentItem | null = null
@@ -94,18 +104,34 @@ export class Run {
   worstDeal: Deal | null = null
   decisions: Decision[] = []
   events: RunEvent[] = []
+  /** Time the clock stood still (guided items). */
+  bonusMs = 0
   private collectEvents: boolean
+  private scripted: ReadonlyArray<PricedItem | undefined>
+  private pauseBelowIndex: number
 
-  constructor(seed: string, config: RunConfig = DEFAULT_CONFIG, opts: { events?: boolean } = {}) {
+  constructor(seed: string, config: RunConfig = DEFAULT_CONFIG, opts: RunOptions = {}) {
     this.seed = seed
     this.config = config
     this.cash = config.startCash
     this.collectEvents = opts.events ?? true
+    this.scripted = opts.scripted ?? []
+    this.pauseBelowIndex = opts.pauseTimerBelowIndex ?? 0
     this.spawn(this.config.slideInMs)
   }
 
   get timeLeftMs(): number {
-    return Math.max(0, this.config.durationMs - this.elapsedMs)
+    return Math.max(0, this.endAtMs - this.elapsedMs)
+  }
+
+  /** Elapsed time at which the morning ends. */
+  get endAtMs(): number {
+    return this.config.durationMs + this.bonusMs
+  }
+
+  /** True while a guided item holds the clock still. */
+  get timerPaused(): boolean {
+    return this.phase === 'playing' && this.current !== null && this.current.item.index < this.pauseBelowIndex
   }
 
   get netWorth(): number {
@@ -217,9 +243,23 @@ export class Run {
     return 'ok'
   }
 
+  /**
+   * Rewarded extra time: reopen an ended morning for more seconds. The stall
+   * already sold at 0 s, so play continues with the cash in hand.
+   */
+  extend(ms: number): boolean {
+    if (this.phase !== 'ended' || this.bust) return false
+    this.config = { ...this.config, durationMs: this.config.durationMs + ms }
+    this.phase = 'playing'
+    this.extended += ms
+    this.spawn(this.elapsedMs + this.config.slideInMs)
+    return true
+  }
+
   /** Advance the morning by a fixed step. */
   step(dtMs: number): void {
     if (this.phase !== 'playing') return
+    if (this.timerPaused) this.bonusMs += dtMs
     this.elapsedMs += dtMs
     for (let i = this.stall.length - 1; i >= 0; i--) {
       const e = this.stall[i]
@@ -228,8 +268,8 @@ export class Run {
         this.sell(e)
       }
     }
-    if (this.elapsedMs >= this.config.durationMs) {
-      this.elapsedMs = this.config.durationMs
+    if (this.elapsedMs >= this.endAtMs) {
+      this.elapsedMs = this.endAtMs
       const left = this.stall
       this.stall = []
       for (const e of left) this.sell(e)
@@ -258,8 +298,9 @@ export class Run {
   }
 
   private spawn(readyAtMs: number): void {
-    const template = generateItem(this.seed, this.nextIndex++)
-    const item = priceItem(template, this.netWorth)
+    const index = this.nextIndex++
+    const scripted = this.scripted[index]
+    const item = scripted ? { ...scripted, index, haggleRolls: scripted.haggleRolls.slice() } : priceItem(generateItem(this.seed, index), this.netWorth)
     this.current = { item, readyAtMs, haggles: 0, ask: item.ask }
     this.lockUntilMs = readyAtMs
     this.itemsSeen++

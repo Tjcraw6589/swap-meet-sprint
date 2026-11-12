@@ -144,7 +144,7 @@ describe('item generator over 10,000 items', () => {
     const names = new Set(items.map((it) => it.name))
     expect(names.size).toBeGreaterThan(5000)
     const looks = new Set(items.map((it) => `${it.category}/${it.artSeed}/${it.palette}`))
-    expect(looks.size).toBeGreaterThan(9900)
+    expect(looks.size).toBeGreaterThan(9500)
   })
 
   it('is deterministic by seed and index', () => {

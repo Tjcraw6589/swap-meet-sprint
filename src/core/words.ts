@@ -98,11 +98,11 @@ export const ARTISTS: readonly string[] = [
 ]
 
 export const PAINTING_TITLES: readonly string[] = [
-  'Still Life with Turnips', 'Boats at Dusk', 'Portrait of a Grumpy Cat', 'Blue Hills',
+  'Still Life with Turnips', 'Boats at Dusk', 'A Grumpy Cat', 'Blue Hills',
   'Harbor Morning', 'The Sleeping Goose', 'Lemons on a Sill', 'Rain over Gullsby', 'Two Pears',
-  'Red Barn in Fog', 'Night Ferry', "The Clockmaker's Daughter", 'Sunday Bread',
+  'Red Barn in Fog', 'Night Ferry', "Clockmaker's Daughter", 'Sunday Bread',
   'Cows Considering Rain', 'The Yellow Chair', 'Windmill at Noon', 'Girl with a Radish',
   'A Quiet Pond', 'Three Hens', 'Fog on Pepper Street', 'The Lost Umbrella', 'Orchard in April',
-  'Storm over the Bakery', 'Old Man with Trumpet', 'Tea for the Lighthouse Keeper',
+  'Storm over the Bakery', 'Old Man with Trumpet', 'Tea for the Keeper',
   'Bicycle in the Hallway', 'Moth on a Teacup', 'The Mayor Asleep', 'Six Onions', 'Dog at the Window',
 ]

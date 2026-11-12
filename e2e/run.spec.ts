@@ -54,7 +54,9 @@ test('plays a seeded morning with the keyboard to the result screen', async ({ p
   expect(final.seed).toBe('e2e-1')
   await page.screenshot({ path: 'test-results/m1-result.png' })
 
-  // Play again lands straight back in play.
+  // Play again lands straight back in play. Presses in the first 0.6 s are
+  // ignored so a player mashing keys at 0 s does not skip the result.
+  await page.waitForTimeout(700)
   await page.keyboard.press('Enter')
   await expect.poll(async () => (await state(page)).screen).toBe('play')
   expect(errors).toEqual([])

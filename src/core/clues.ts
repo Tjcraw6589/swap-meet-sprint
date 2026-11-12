@@ -7,7 +7,7 @@ export const CHIP_TEXT: Record<TraitValue, readonly string[]> = {
   broken: [
     'Does not work', 'Cracked shell', 'Dead on arrival', 'Missing parts', 'Snapped hinge',
     'No power', 'Smashed screen', 'Rattles inside', 'Bent frame', 'Burnt out', 'Parts only',
-    'Will not switch on', 'Chipped and dead', 'Wires hanging out',
+    'Will not switch on', 'Chipped and dead', 'Wires loose',
   ],
   worn: [
     'Scuffed', 'Scratched up', 'Faded colours', 'Sticky buttons', 'Well used', 'Dented corner',
@@ -16,7 +16,7 @@ export const CHIP_TEXT: Record<TraitValue, readonly string[]> = {
   ],
   clean: [
     'Works fine', 'Light wear', 'Tidy', 'Gently used', 'Good shape', 'Nice and clean',
-    'Fully working', 'Small marks only', 'Cared for', 'Looked after', 'Solid', 'Nothing missing',
+    'Fully working', 'Tiny marks', 'Cared for', 'Looked after', 'Solid', 'Nothing missing',
     'Honest wear', 'Tested today',
   ],
   mint: [
@@ -36,7 +36,7 @@ export const CHIP_TEXT: Record<TraitValue, readonly string[]> = {
   boxed: [
     'Original box', 'Boxed', 'In the box', 'Box and manual', 'Sealed box', 'Comes boxed',
     'Box included', 'With packaging', 'Full set in box', 'Box a bit tatty', 'Still in packaging',
-    'Boxed with inserts', 'Box and papers', 'Complete in box',
+    'Box and inserts', 'Box and papers', 'Complete in box',
   ],
   unboxed: [
     'No box', 'Loose', 'Unboxed', 'Box missing', 'Just the item', 'No packaging', 'Bare',

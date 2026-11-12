@@ -187,3 +187,66 @@ describe('simulator', () => {
     expect(scores.size).toBeGreaterThan(3)
   })
 })
+
+describe('extra time', () => {
+  it('reopens an ended morning for more seconds', () => {
+    const run = new Run('extend')
+    advance(run, 60_000)
+    expect(run.phase).toBe('ended')
+    expect(run.extend(15_000)).toBe(true)
+    expect(run.phase).toBe('playing')
+    expect(run.timeLeftMs).toBe(15_000)
+    expect(run.current).not.toBeNull()
+    advance(run, 15_000)
+    expect(run.phase).toBe('ended')
+    expect(run.extend(15_000)).toBe(true)
+    expect(run.extended).toBe(30_000)
+  })
+
+  it('cannot extend a morning that is still running', () => {
+    const run = new Run('extend-2')
+    expect(run.extend(15_000)).toBe(false)
+  })
+})
+
+describe('grails', () => {
+  it('every grail tier item is one of the 40 fixed grails', () => {
+    let seen = 0
+    const ids = new Set<number>()
+    for (let i = 0; i < 4000; i++) {
+      const it = generateItem('grail-check', i)
+      if (it.tier === 'grail') {
+        seen++
+        expect(it.grailId).not.toBeNull()
+        ids.add(it.grailId!)
+      } else expect(it.grailId).toBeNull()
+    }
+    expect(seen).toBeGreaterThan(60)
+    expect(ids.size).toBeGreaterThan(20)
+  })
+})
+
+describe('guided items', () => {
+  it('uses scripted items and holds the clock still below the pause index', async () => {
+    const { guidedItems, GUIDED_COUNT } = await import('../src/game/guided.ts')
+    const items = guidedItems()
+    const run = new Run('guided', DEFAULT_CONFIG, { scripted: items, pauseTimerBelowIndex: GUIDED_COUNT })
+    expect(run.current!.item.name).toBe(items[0].name)
+    expect(run.timerPaused).toBe(true)
+    advance(run, 5_000)
+    expect(run.timeLeftMs).toBe(60_000)
+    expect(run.buy()).toBe('ok')
+    advance(run, 1_000)
+    expect(run.current!.item.name).toBe(items[1].name)
+    expect(run.haggle()).toBe('deal')
+    advance(run, 1_000)
+    run.pass()
+    advance(run, 1_000)
+    expect(run.current!.item.name).toBe(items[2].name)
+    run.pass()
+    expect(run.timerPaused).toBe(false)
+    advance(run, 1_000)
+    expect(run.timeLeftMs).toBe(59_000)
+    expect(run.cash).toBe(50 - items[0].ask + items[0].trueValue)
+  })
+})

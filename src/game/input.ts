@@ -1,28 +1,26 @@
-// Input: pointer events for the three buttons and swipes, keyboard for the
-// same three actions. The layout is never chosen by detecting touch.
+// Input: pointer events for every on screen control and for swipes, and the
+// keyboard for the same actions. The layout is never chosen by detecting touch.
 
-import type { Action } from '../core/run.ts'
+import type { Cmd, Screen } from './game.ts'
 import type { Layout } from './layout.ts'
-import { contains } from './layout.ts'
-
-export type UiCommand = Action | 'again' | 'share'
 
 export interface InputHandlers {
   layout(): Layout
-  screen(): 'play' | 'result'
-  resultButtons(): { share: { x: number; y: number; w: number; h: number }; again: { x: number; y: number; w: number; h: number } }
-  command(cmd: UiCommand): void
-  /** Any first interaction, used to unlock audio. */
+  screen(): Screen
+  /** The control under a logical point. */
+  hit(x: number, y: number): Cmd | null
+  command(cmd: Cmd): void
+  /** Any interaction, used to unlock audio inside a gesture. */
   interact(): void
 }
 
-const SWIPE_PX = 24
+const SWIPE_CSS_PX = 28
 
 export function attachInput(canvas: HTMLCanvasElement, h: InputHandlers): () => void {
   let downId = -1
   let downX = 0
   let downY = 0
-  let downOnButton = false
+  let downOnControl = false
 
   const toLogical = (ev: PointerEvent): { x: number; y: number } => {
     const L = h.layout()
@@ -32,48 +30,31 @@ export function attachInput(canvas: HTMLCanvasElement, h: InputHandlers): () => 
     return { x, y }
   }
 
-  const buttonAt = (x: number, y: number): UiCommand | null => {
-    const L = h.layout()
-    if (h.screen() === 'play') {
-      if (contains(L.buttons.pass, x, y)) return 'pass'
-      if (contains(L.buttons.haggle, x, y)) return 'haggle'
-      if (contains(L.buttons.buy, x, y)) return 'buy'
-      return null
-    }
-    const rb = h.resultButtons()
-    if (contains(rb.share, x, y)) return 'share'
-    if (contains(rb.again, x, y)) return 'again'
-    return null
-  }
-
   const onDown = (ev: PointerEvent): void => {
-    if (downId !== -1) return
     h.interact()
+    if (downId !== -1) return
     ev.preventDefault()
     const p = toLogical(ev)
     downId = ev.pointerId
-    downX = p.x
-    downY = p.y
+    downX = ev.clientX
+    downY = ev.clientY
     try {
       canvas.setPointerCapture(ev.pointerId)
     } catch {
       // some browsers refuse capture on synthetic events
     }
-    const cmd = buttonAt(p.x, p.y)
-    downOnButton = cmd !== null
+    const cmd = h.hit(p.x, p.y)
+    downOnControl = cmd !== null
     if (cmd) h.command(cmd)
   }
 
   const onUp = (ev: PointerEvent): void => {
     if (ev.pointerId !== downId) return
     downId = -1
-    if (downOnButton) return
-    if (h.screen() !== 'play') return
-    const p = toLogical(ev)
-    const L = h.layout()
-    const dx = ((p.x - downX) * L.scale) / Math.max(1, window.devicePixelRatio || 1)
-    const dy = ((p.y - downY) * L.scale) / Math.max(1, window.devicePixelRatio || 1)
-    if (Math.abs(dx) < SWIPE_PX && Math.abs(dy) < SWIPE_PX) return
+    if (downOnControl || h.screen() !== 'play') return
+    const dx = ev.clientX - downX
+    const dy = ev.clientY - downY
+    if (Math.abs(dx) < SWIPE_CSS_PX && Math.abs(dy) < SWIPE_CSS_PX) return
     if (Math.abs(dx) > Math.abs(dy)) h.command(dx > 0 ? 'buy' : 'pass')
     else if (dy < 0) h.command('haggle')
   }
@@ -82,28 +63,35 @@ export function attachInput(canvas: HTMLCanvasElement, h: InputHandlers): () => 
     if (ev.pointerId === downId) downId = -1
   }
 
+  const keyCmd = (code: string, screen: Screen): Cmd | null => {
+    if (code === 'KeyM') return 'mute'
+    switch (screen) {
+      case 'play':
+        if (code === 'ArrowLeft' || code === 'KeyA') return 'pass'
+        if (code === 'ArrowRight' || code === 'KeyD') return 'buy'
+        if (code === 'ArrowUp' || code === 'KeyW' || code === 'Space') return 'haggle'
+        return null
+      case 'result':
+        if (code === 'Enter' || code === 'Space') return 'again'
+        if (code === 'Escape') return 'home'
+        return null
+      case 'title':
+        if (code === 'Enter' || code === 'Space') return 'daily'
+        if (code === 'KeyF') return 'free'
+        return null
+      case 'offer':
+        if (code === 'Enter') return 'watch'
+        if (code === 'Escape') return 'skip'
+        return null
+      case 'finds':
+        if (code === 'Escape' || code === 'Enter') return 'home'
+        return null
+    }
+  }
+
   const onKey = (ev: KeyboardEvent): void => {
-    if (ev.repeat) return
-    const target = ev.target as HTMLElement | null
-    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return
-    let cmd: UiCommand | null = null
-    if (h.screen() === 'play') {
-      switch (ev.code) {
-        case 'ArrowLeft':
-        case 'KeyA':
-          cmd = 'pass'
-          break
-        case 'ArrowRight':
-        case 'KeyD':
-          cmd = 'buy'
-          break
-        case 'ArrowUp':
-        case 'KeyW':
-        case 'Space':
-          cmd = 'haggle'
-          break
-      }
-    } else if (ev.code === 'Space' || ev.code === 'Enter') cmd = 'again'
+    if (ev.repeat || ev.ctrlKey || ev.metaKey || ev.altKey) return
+    const cmd = keyCmd(ev.code, h.screen())
     if (cmd) {
       ev.preventDefault()
       h.interact()
@@ -111,16 +99,18 @@ export function attachInput(canvas: HTMLCanvasElement, h: InputHandlers): () => 
     }
   }
 
+  const noMenu = (e: Event) => e.preventDefault()
   canvas.addEventListener('pointerdown', onDown)
   canvas.addEventListener('pointerup', onUp)
   canvas.addEventListener('pointercancel', onCancel)
+  canvas.addEventListener('contextmenu', noMenu)
   window.addEventListener('keydown', onKey)
-  canvas.addEventListener('contextmenu', (e) => e.preventDefault())
 
   return () => {
     canvas.removeEventListener('pointerdown', onDown)
     canvas.removeEventListener('pointerup', onUp)
     canvas.removeEventListener('pointercancel', onCancel)
+    canvas.removeEventListener('contextmenu', noMenu)
     window.removeEventListener('keydown', onKey)
   }
 }

@@ -2,6 +2,8 @@
 // so pixel art stays crisp. The logical size grows to fill the window at that
 // scale, and the layout places regions by orientation.
 
+import { S } from './theme.ts'
+
 export interface Rect {
   x: number
   y: number
@@ -25,7 +27,7 @@ export interface Layout {
   /** Device pixel size of the canvas. */
   deviceW: number
   deviceH: number
-  /** CSS size of the canvas. */
+  /** CSS size of the window. */
   cssW: number
   cssH: number
   portrait: boolean
@@ -33,6 +35,7 @@ export interface Layout {
   /** The playable area inside the safe insets. */
   area: Rect
   top: Rect
+  mute: Rect
   card: Rect
   clues: Rect
   stall: Rect
@@ -74,48 +77,52 @@ export function computeLayout(cssW: number, cssH: number, dpr: number, safeCss: 
   return portrait ? portraitLayout(base) : landscapeLayout(base)
 }
 
-type Base = Omit<Layout, 'top' | 'card' | 'clues' | 'stall' | 'buttons'>
+type Base = Omit<Layout, 'top' | 'mute' | 'card' | 'clues' | 'stall' | 'buttons'>
+
+function topBar(a: Rect): { top: Rect; mute: Rect } {
+  const top: Rect = { x: a.x, y: a.y, w: a.w, h: S.topBar }
+  const mute: Rect = { x: a.x + a.w - S.topBar - 2, y: a.y + 1, w: S.topBar, h: S.topBar - 2 }
+  return { top, mute }
+}
+
+function buttonRow(a: Rect, y: number, h: number, gap: number): Layout['buttons'] {
+  const bw = Math.floor((a.w - gap * 4) / 3)
+  return {
+    pass: { x: a.x + gap, y, w: bw, h },
+    haggle: { x: a.x + gap * 2 + bw, y, w: bw, h },
+    buy: { x: a.x + gap * 3 + bw * 2, y, w: bw, h },
+  }
+}
 
 function landscapeLayout(b: Base): Layout {
   const a = b.area
-  const topH = 18
-  const buttonH = Math.max(28, Math.round(a.h * 0.17))
-  const gap = 4
-  const top: Rect = { x: a.x, y: a.y, w: a.w, h: topH }
+  const gap = S.gap
+  const { top, mute } = topBar(a)
+  const buttonH = Math.max(29, Math.round(a.h * 0.16))
   const buttonsY = a.y + a.h - buttonH - gap
-  const stallW = Math.min(Math.round(a.w * 0.3), 120)
-  const stall: Rect = { x: a.x + a.w - stallW - gap, y: top.y + topH + gap, w: stallW, h: buttonsY - top.y - topH - gap * 2 }
+  const bodyY = top.y + top.h + gap
+  const stallW = Math.min(Math.round(a.w * 0.3), 128)
+  const stall: Rect = { x: a.x + a.w - stallW - gap, y: bodyY, w: stallW, h: buttonsY - bodyY - gap }
   const cardX = a.x + gap
   const cardW = stall.x - cardX - gap
-  const cluesH = 14
-  const card: Rect = { x: cardX, y: top.y + topH + gap, w: cardW, h: buttonsY - top.y - topH - gap * 3 - cluesH }
-  const clues: Rect = { x: cardX, y: card.y + card.h + gap, w: cardW, h: cluesH }
-  const bw = Math.floor((a.w - gap * 4) / 3)
-  const buttons = {
-    pass: { x: a.x + gap, y: buttonsY, w: bw, h: buttonH },
-    haggle: { x: a.x + gap * 2 + bw, y: buttonsY, w: bw, h: buttonH },
-    buy: { x: a.x + gap * 3 + bw * 2, y: buttonsY, w: bw, h: buttonH },
-  }
-  return { ...b, top, card, clues, stall, buttons }
+  const cluesH = 20
+  const clues: Rect = { x: cardX, y: buttonsY - gap - cluesH, w: cardW, h: cluesH }
+  const card: Rect = { x: cardX, y: bodyY, w: cardW, h: clues.y - gap - bodyY }
+  return { ...b, top, mute, card, clues, stall, buttons: buttonRow(a, buttonsY, buttonH, gap) }
 }
 
 function portraitLayout(b: Base): Layout {
   const a = b.area
-  const topH = 18
-  const buttonH = Math.max(32, Math.round(a.h * 0.12))
-  const gap = 4
-  const top: Rect = { x: a.x, y: a.y, w: a.w, h: topH }
+  const gap = S.gap
+  const { top, mute } = topBar(a)
+  const buttonH = Math.max(36, Math.round(a.h * 0.11))
   const buttonsY = a.y + a.h - buttonH - gap
-  const stallH = Math.max(28, Math.round(a.h * 0.12))
+  const stallH = Math.max(58, Math.round(a.h * 0.14))
   const stall: Rect = { x: a.x + gap, y: buttonsY - gap - stallH, w: a.w - gap * 2, h: stallH }
-  const cluesH = 30
+  // three chips, two lines each when the screen is tall enough
+  const cluesH = a.h >= 380 ? 3 * 22 + 6 : 3 * 13 + 6
   const clues: Rect = { x: a.x + gap, y: stall.y - gap - cluesH, w: a.w - gap * 2, h: cluesH }
-  const card: Rect = { x: a.x + gap, y: top.y + topH + gap, w: a.w - gap * 2, h: clues.y - gap - (top.y + topH + gap) }
-  const bw = Math.floor((a.w - gap * 4) / 3)
-  const buttons = {
-    pass: { x: a.x + gap, y: buttonsY, w: bw, h: buttonH },
-    haggle: { x: a.x + gap * 2 + bw, y: buttonsY, w: bw, h: buttonH },
-    buy: { x: a.x + gap * 3 + bw * 2, y: buttonsY, w: bw, h: buttonH },
-  }
-  return { ...b, top, card, clues, stall, buttons }
+  const bodyY = top.y + top.h + gap
+  const card: Rect = { x: a.x + gap, y: bodyY, w: a.w - gap * 2, h: clues.y - gap - bodyY }
+  return { ...b, top, mute, card, clues, stall, buttons: buttonRow(a, buttonsY, buttonH, gap) }
 }

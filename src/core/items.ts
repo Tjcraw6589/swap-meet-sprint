@@ -5,6 +5,7 @@
 import { Rng } from './rng.ts'
 import * as W from './words.ts'
 import { CHIP_TEXT, SELLER_TEXT, type TraitValue } from './clues.ts'
+import { GRAILS } from './grails.ts'
 
 export type Category = 'handheld' | 'cartridge' | 'robot' | 'lamp' | 'record' | 'camera' | 'watch' | 'painting'
 export type Tier = 'junk' | 'common' | 'good' | 'rare' | 'grail'
@@ -75,6 +76,8 @@ export interface ItemTemplate {
   askMult: number
   clues: Clue[]
   haggleRolls: number[]
+  /** Set on grail tier items: which of the 40 fixed grails this is. */
+  grailId: number | null
 }
 
 export interface PricedItem extends ItemTemplate {
@@ -196,7 +199,7 @@ function makeClues(rng: Rng, item: Pick<ItemTemplate, 'tier' | 'condition' | 'fa
 
 export function generateItem(seed: string, index: number): ItemTemplate {
   const rng = new Rng(`${seed}#${index}`)
-  const category = rng.pick(CATEGORIES)
+  let category = rng.pick(CATEGORIES)
   const tier = pickWeighted(rng, TIER_TABLE, TIERS)
   const tierShare = rng.next()
   const condition = pickWeighted(rng, CONDITION_TABLE, CONDITIONS)
@@ -206,9 +209,18 @@ export function generateItem(seed: string, index: number): ItemTemplate {
   const sellerFace = rng.int(0, FACES_PER_SELLER - 1)
   const seller = SELLER_TABLE[sellerType]
   const askMult = rng.float(seller.min, seller.max)
-  const name = makeName(rng, category)
-  const artSeed = rng.int(0, 0x7fffffff)
-  const palette = rng.int(0, PALETTES - 1)
+  let name = makeName(rng, category)
+  let artSeed = rng.int(0, 0x7fffffff)
+  let palette = rng.int(0, PALETTES - 1)
+  let grailId: number | null = null
+  if (tier === 'grail') {
+    const grail = GRAILS[rng.int(0, GRAILS.length - 1)]
+    grailId = grail.id
+    name = grail.name
+    category = grail.category
+    artSeed = grail.artSeed
+    palette = grail.palette
+  }
   const clues = makeClues(rng, { tier, condition, fake, boxed })
   const haggleRolls: number[] = []
   for (let i = 0; i < HAGGLE_ROLLS; i++) haggleRolls.push(rng.next())
@@ -229,5 +241,6 @@ export function generateItem(seed: string, index: number): ItemTemplate {
     askMult,
     clues,
     haggleRolls,
+    grailId,
   }
 }
