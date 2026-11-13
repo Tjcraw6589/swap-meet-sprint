@@ -4,7 +4,7 @@ Another assistant reads this file to report status. Keep it current after every 
 
 Project: Swap Meet Sprint. A one minute buy, haggle or pass game for web portals and iPhone from one codebase. Credit: Bal Tak. Brief: `C:\Users\Tyjcr\Tools\GameBriefs\SWAP_MEET_SPRINT_PROMPT.md`.
 
-Local folder: `C:\Users\Tyjcr\swap-meet-sprint`. Git author is set to Bal Tak with the GitHub noreply address. No remote yet (waiting on the owner's step 1).
+Local folder: `C:\Users\Tyjcr\swap-meet-sprint`. Git author is set to Bal Tak with the GitHub noreply address. Repo: https://github.com/Tjcraw6589/swap-meet-sprint (public, branch main).
 
 ## Done
 
@@ -60,13 +60,16 @@ Local folder: `C:\Users\Tyjcr\swap-meet-sprint`. Git author is set to Bal Tak wi
 
 ## Live
 
-Nothing is live yet. GitHub Pages goes live as soon as step 1 below is done. The link will be https://tjcraw6589.github.io/swap-meet-sprint/ (it shows the GitHub account name).
+* Game: https://tjcraw6589.github.io/swap-meet-sprint/ (live 13 Nov 2026; checked: loads, plays, no console errors, loads nothing from other sites).
+* Privacy page: https://tjcraw6589.github.io/swap-meet-sprint/privacy.html
+* Support page: https://tjcraw6589.github.io/swap-meet-sprint/support.html
+* Every push to main runs the type check and all unit tests on GitHub, then republishes the site. The first run passed.
 
 ## Waiting on the owner
 
-One list for Milestones 3 and 4. Steps 2, 3 and 4 can be done any time; steps 5 to 9 need step 1 first.
+One list for Milestones 3 and 4. Steps 2 to 9 can all be done now.
 
-1. Let me use GitHub. Open a terminal and run `gh auth login`. Pick GitHub.com, then HTTPS, then "Login with a web browser". Copy the one time code it shows, press Enter, paste the code into the page that opens and approve. Then tell me "GitHub done". I will create the public repo `swap-meet-sprint`, push, switch on Pages and send you the live link.
+1. Done 13 Nov 2026: GitHub sign in. The repo and the site are live.
 2. CrazyGames. Go to https://developer.crazygames.com and sign up for a free developer account. Choose to submit a new game. Fill each field from `store/crazygames.md` and upload the files it lists (the zip, three covers, two videos). Payout details are yours alone; I never need them. Press submit when you are happy, then tell me it is in.
 3. itch.io. Sign up for a free account at https://itch.io. Choose "Upload new project". Fill each field from `store/itch.md`, upload `release/swap-meet-sprint-itch-0.1.0.zip` and the cover and screenshots it lists. Set it public when you are happy, then send me the page link.
 4. Try the iPhone app in Expo Go. Install Expo Go from the App Store on your iPhone (free). Put the phone on the same WiFi as this PC. In a terminal run `cd C:\Users\Tyjcr\swap-meet-sprint\ios-app` and then `npx expo start`. Point the iPhone camera at the QR code it shows and open it in Expo Go. Play a round: check you feel the taps on buy and sale, that Share opens the share sheet, and that your best score is still there after you close and reopen Expo Go. Tell me what you see.
@@ -84,6 +87,7 @@ One list for Milestones 3 and 4. Steps 2, 3 and 4 can be done any time; steps 5 
 ## Decisions so far
 
 * Title: Swap Meet Sprint, checked free on the App Store, CrazyGames and itch.io on 12 Nov 2026.
+* Before the first push the local history was rewritten so the owner's real name appears in no commit. `tests/privacy-name.test.ts` fails if it ever appears in a tracked file, or if any commit is not by Bal Tak.
 * Repo will be `swap-meet-sprint`, public, on the existing GitHub account. The Pages link will show that account name.
 * Daily seed uses the UTC date.
 * Haggles per item are capped at 6; the chance halves each time as the brief says.
